@@ -4,7 +4,6 @@
 struct PlateGpuData
 {
     float3 center3D;
-// --- MODIFIED: Changed from float2 to float3 ---
     float3 movementVector;
     float speed;
     int isOceanic;
@@ -12,8 +11,10 @@ struct PlateGpuData
 
 // Input buffer of all plate data
 StructuredBuffer<PlateGpuData> _PlateDataBuffer;
-// Our writable output texture (R8 format)
+
+// --- MODIFIED: Now two output textures ---
 RWTexture2D<float> _PlateIDTexture;
+RWTexture2D<half> _BoundaryDeltaTexture; // RHalf (R16F) format
 
 // Parameters set from C#
 int _NumPlates;
@@ -42,26 +43,35 @@ void CSMain(uint3 id : SV_DispatchThreadID)
     // Get 3D position on the sphere
     float3 p1 = UVToSphere(uv);
 
-    // Find the closest plate center
-    float maxDot = -2.0; // Start lower than lowest possible dot product (-1)
+    // --- MODIFIED: "Second-closest" trick ---
+    // [cite: GeminiUpload/Planet_Generator_Architecture_Review.md]
+    float bestDot = -2.0;
+    float secondDot = -2.0;
     int closestID = 0;
 
     for (int i = 0; i < _NumPlates; i++)
     {
         float3 p2 = _PlateDataBuffer[i].center3D;
-        
-        // Dot product is our distance check
-        // (A larger dot product means a smaller angle/distance)
         float dotProd = dot(p1, p2);
 
-        if (dotProd > maxDot)
+        if (dotProd > bestDot)
         {
-            maxDot = dotProd;
+            // This is the new best
+            secondDot = bestDot; // Old best becomes second-best
+            bestDot = dotProd;
             closestID = i;
+        }
+        else if (dotProd > secondDot)
+        {
+            // This is the new second-best
+            secondDot = dotProd;
         }
     }
 
-    // Write the plate ID (normalized from 0-255 to 0-1)
-    // The R8 texture format will store this 0-1 float as an 8-bit byte.
+    // 1. Write the plate ID (normalized from 0-255 to 0-1)
     _PlateIDTexture[id.xy] = (float) closestID / 255.0;
+    
+    // 2. Write the delta (difference between best and second-best)
+    // A small delta means we are very close to a boundary
+    _BoundaryDeltaTexture[id.xy] = (half) (bestDot - secondDot);
 }

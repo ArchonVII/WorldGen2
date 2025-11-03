@@ -2,17 +2,23 @@ Shader "Unlit/PlateBoundariesAA_v2"
 {
     Properties
     {
-        _PlateIDTex ("Plate ID (R channel)", 2D) = "white" {}
-        _Thickness  ("Line Thickness (UV)", Float) = 1.0
-        _AA         ("Antialias Width", Float) = 1.0
-        _LineColor  ("Line Color", Color) = (0,0,0,1)
-        _Opacity    ("Opacity", Range(0,1)) = 1
+        // --- MODIFIED: We no longer use PlateIDTex for boundary logic ---
+        _BoundaryDeltaTex ("Boundary Delta (RHalf)", 2D) = "white" {}
+        
+        // --- MODIFIED: These properties now control the new logic ---
+        // [Tooltip(...)] attributes are C# only and not valid in ShaderLab.
+        _Threshold ("Threshold", Range(0.001, 0.1)) = 0.02
+        
+        _AA ("Antialias Width", Range(0.001, 0.05)) = 0.01
+
+        _LineColor ("Line Color", Color) = (1,1,1,1)
+        _Opacity ("Opacity", Range(0,1)) = 1.0
     }
     SubShader
     {
-        Tags { "Queue"="Transparent" "RenderType"="Transparent" }
-        ZWrite Off
+        Tags { "RenderType"="Transparent" "Queue"="Transparent" }
         Blend SrcAlpha OneMinusSrcAlpha
+        ZWrite Off
         Cull Back
 
         Pass
@@ -22,51 +28,56 @@ Shader "Unlit/PlateBoundariesAA_v2"
             #pragma fragment frag
             #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
 
-            TEXTURE2D(_PlateIDTex); SAMPLER(sampler_PlateIDTex);
+            // --- MODIFIED: New texture and sampler ---
+            TEXTURE2D(_BoundaryDeltaTex);
+            SAMPLER(sampler_BoundaryDeltaTex);
 
             CBUFFER_START(UnityPerMaterial)
-                float4 _PlateIDTex_TexelSize; // x=1/w, y=1/h
-                float  _Thickness;
-                float  _AA;
+                float _Threshold;
+                float _AA;
                 float4 _LineColor;
-                float  _Opacity;
+                float _Opacity;
             CBUFFER_END
 
-            struct Attributes { float4 positionOS:POSITION; float2 uv:TEXCOORD0; };
-            struct Varyings  { float4 positionHCS:SV_POSITION; float2 uv:TEXCOORD0; };
+            struct Attributes
+            {
+                float4 positionOS : POSITION;
+                float2 uv         : TEXCOORD0;
+            };
 
-            Varyings vert(Attributes v)
+            struct Varyings
+            {
+                float4 positionHCS : SV_POSITION;
+                float2 uv          : TEXCOORD0;
+            };
+
+            Varyings vert (Attributes v)
             {
                 Varyings o;
                 o.positionHCS = TransformObjectToHClip(v.positionOS.xyz);
                 o.uv = v.uv;
                 return o;
             }
-
-            float idAt(float2 uv) { return SAMPLE_TEXTURE2D(_PlateIDTex, sampler_PlateIDTex, uv).r; }
-
-            half4 frag(Varyings i) : SV_Target
+            
+            half4 frag (Varyings i) : SV_Target
             {
-                float2 t = _PlateIDTex_TexelSize.xy;
+                // --- MODIFIED: New analytic boundary logic ---
+                // [cite: GeminiUpload/Planet_Generator_Architecture_Review.md]
+                
+                // 1. Sample the pre-calculated boundary delta
+                float delta = SAMPLE_TEXTURE2D(_BoundaryDeltaTex, sampler_BoundaryDeltaTex, i.uv).r;
 
-                // center & 4-neighbors (enough to mark borders cleanly)
-                float c = idAt(i.uv);
-                float d1 = abs(c - idAt(i.uv + float2( t.x, 0)));
-                float d2 = abs(c - idAt(i.uv + float2(-t.x, 0)));
-                float d3 = abs(c - idAt(i.uv + float2(0,  t.y)));
-                float d4 = abs(c - idAt(i.uv + float2(0, -t.y)));
-
-                // any change means "on a border"
-                float diff = max(max(d1,d2), max(d3,d4));
-
-                // AA around a tiny threshold near zero
-                float thr = 0.001; // ~1/1024 of 0..1 range
-                float aaw = max(fwidth(diff) * _AA, 1e-5);
-                float alpha = smoothstep(thr - aaw * _Thickness, thr + aaw * _Thickness, diff);
-
+                // 2. Calculate alpha
+                // We want a line where delta is *less than* the threshold.
+                // smoothstep(edge0, edge1, x) = 0 if x < edge0, 1 if x > edge1
+                // We invert the logic to get an alpha *at* the edge.
+                float alpha = 1.0 - smoothstep(_Threshold - _AA, _Threshold + _AA, delta);
+                
+                // 3. Output final color
                 return half4(_LineColor.rgb, alpha * _Opacity);
             }
             ENDHLSL
         }
     }
 }
+

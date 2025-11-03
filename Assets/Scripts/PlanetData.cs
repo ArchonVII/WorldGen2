@@ -100,19 +100,15 @@ public struct PlanetGenerationConfig
 
 	[Tooltip("The height of the generated plate ID map. Higher = more precise boundaries.")]
 	public int plateMapResolutionY;
+	
+
 }
 
-// --- THIS STRUCT WAS MISSING ---
-/// <summary>
-/// This struct MUST match the layout in the compute shaders.
-/// It's used to send plate data to the GPU.
-/// Note: 'bool' is tricky, so we use 'int isOceanic' (0 or 1).
-/// </summary>
+
 public struct PlateGpuData
 {
 	public Vector3 center3D;
 	
-	// --- MODIFIED: Changed from Vector2 to Vector3 ---
 	// This supports 3D velocity vectors from models like AxisFlows
 	public Vector3 movementVector;
 	public float speed;
@@ -121,7 +117,6 @@ public struct PlateGpuData
 	// We must define the size (stride) for the compute buffer
 	public static int GetStride()
 	{
-		// --- MODIFIED: 3 + 3 + 1 + 1 = 8 floats ---
 		// Vector3 (3) + Vector3 (3) + float (1) + int (1) = 8 floats
 		// (int is 4 bytes, same as float)
 		return sizeof(float) * (3 + 3 + 1) + sizeof(int);
@@ -129,16 +124,14 @@ public struct PlateGpuData
 }
 
 
-/// <summary>
+
 /// Represents a single tectonic plate with its properties
-/// </summary>
 public class TectonicPlate
 {
 	public int ID;
 	public Vector2 Center;  // Seed point in UV space (0-1)
 	public Vector3 Center3D; // Pre-calculated 3D position on unit sphere
 	public Color Color;     // For visualization
-	// --- MODIFIED: Changed from Vector2 to Vector3 ---
 	public Vector3 MovementVector;  // Direction and speed of plate movement
 	public float Speed;
 	public bool IsOceanic;  // Will be used in future heightmap generation
@@ -158,9 +151,7 @@ public class TectonicPlate
 			Mathf.Sin(phi) * Mathf.Sin(theta)
 		);
 		
-		// --- MODIFIED: Removed old velocity logic ---
-		// Velocity is now calculated in PlanetGenerator.cs
-		// after all plates are created.
+
 		Speed = 0;
 		MovementVector = Vector3.zero;
 		
@@ -169,11 +160,7 @@ public class TectonicPlate
 	}
 }
 
-/// <summary>
-/// This is a "data class" that holds all the *output* data from the generator.
-/// The PlanetGenerator *returns* this.
-/// The PlanetController *uses* this to build the visuals.
-/// </summary>
+
 public class PlanetData
 {
 	// --- Store a copy of the inputs ---
@@ -186,20 +173,11 @@ public class PlanetData
 	public bool HasLiquidWater;
 	public bool HasTectonics;
 	public bool HasMagneticField;
-	
-	// --- MODIFIED ---
-	// These are now RenderTextures, as they are generated and live on the GPU
 	public RenderTexture PlateIDTexture; 
-	
-	// --- ADDED ---
 	public RenderTexture Heightmap;
-
-	// --- Tectonic Plate Data ---
 	public List<TectonicPlate> TectonicPlates;
-	
-	// --- ADDED ---
-	// GPU buffer to hold all plate data for compute shaders
 	public ComputeBuffer TectonicPlatesBuffer;
+	public RenderTexture BoundaryDeltaTexture;
 
 	// --- Constructor ---
 	public PlanetData(PlanetGenerationConfig config)
@@ -216,10 +194,9 @@ public class PlanetData
 		HasMagneticField = false;
 		TectonicPlates = new List<TectonicPlate>();
 		
-		// --- MODIFIED ---
-		// Initialize all compute assets to null
 		PlateIDTexture = null;
 		Heightmap = null;
+		BoundaryDeltaTexture = null; 
 		TectonicPlatesBuffer = null;
 	}
 
@@ -232,6 +209,7 @@ public class PlanetData
 		// .Release() is a method on RenderTexture and ComputeBuffer
 		if (PlateIDTexture != null) PlateIDTexture.Release();
 		if (Heightmap != null) Heightmap.Release();
+		if (BoundaryDeltaTexture != null) BoundaryDeltaTexture.Release(); // <-- ADD THIS
 		if (TectonicPlatesBuffer != null) TectonicPlatesBuffer.Release();
 	}
 

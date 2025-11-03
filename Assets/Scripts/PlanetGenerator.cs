@@ -103,8 +103,8 @@ public static class PlanetGenerator
 
 	private static void ApplyPlateVelocityModel(PlanetData data)
 	{
-		// Random state is already initialized by GenerateTectonicPlates
 		
+
 		// Setup for AxisFlows model
 		Vector3 axis1 = Random.insideUnitSphere.normalized;
 		Vector3 axis2 = Random.insideUnitSphere.normalized;
@@ -155,9 +155,8 @@ public static class PlanetGenerator
 	}
 
 	
-	/// <summary>
+
 	/// Creates the empty RenderTextures and ComputeBuffer on the GPU.
-	/// </summary>
 	private static void CreateComputeAssets(PlanetData data)
 	{
 		int texWidth = data.config.plateMapResolutionX;
@@ -166,9 +165,10 @@ public static class PlanetGenerator
 		// Create PlateID texture (8-bit, for 0-255 IDs)
 		data.PlateIDTexture = CreateWritableRenderTexture(texWidth, texHeight, RenderTextureFormat.R8);
 
-		
 		// Create Heightmap texture (32-bit float, for high-precision 0-1 height)
 		data.Heightmap = CreateWritableRenderTexture(texWidth, texHeight, RenderTextureFormat.RFloat);
+
+		data.BoundaryDeltaTexture = CreateWritableRenderTexture(texWidth, texHeight, RenderTextureFormat.RHalf);
 
 		// --- Create and fill the ComputeBuffer ---
 		if (data.TectonicPlates.Count > 0)
@@ -196,8 +196,7 @@ public static class PlanetGenerator
 	/// Helper function to create a RenderTexture configured for compute shader output.
 	private static RenderTexture CreateWritableRenderTexture(int width, int height, RenderTextureFormat format)
 	{
-		// --- FIX --- Added 'RenderTextureReadWrite.Linear' to tell Unity this is a data texture,
-		// which prevents the sRGB warning and ensures correct data handling.
+
 		var rt = new RenderTexture(width, height, 0, format, RenderTextureReadWrite.Linear);
 		rt.enableRandomWrite = true; // IMPORTANT: Allows compute shader to write to it
 		rt.wrapMode = TextureWrapMode.Repeat;

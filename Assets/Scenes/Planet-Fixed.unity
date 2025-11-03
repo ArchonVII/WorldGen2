@@ -1193,6 +1193,9 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1449504974}
+  - component: {fileID: 1449504978}
+  - component: {fileID: 1449504977}
+  - component: {fileID: 1449504976}
   - component: {fileID: 1449504975}
   m_Layer: 0
   m_Name: PlanetController
@@ -1225,38 +1228,78 @@ MonoBehaviour:
   m_GameObject: {fileID: 1449504972}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 185b2ae60e930e042a3699830521c22f, type: 3}
+  m_Script: {fileID: 11500000, guid: addd9e4938cc0964389ef2691ccb02b5, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::PlanetController
+  m_EditorClassIdentifier: Assembly-CSharp::OrbitalCameraRig
+--- !u!114 &1449504976
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1449504972}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1228d9d8946d25748913f1e962222d6f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::SunRig
+  sunLight: {fileID: 1884763495}
+  sunRotationSpeed: 5
+--- !u!114 &1449504977
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1449504972}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3fd9a90f547c1554d951d4dc34fc77ca, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PlanetView
+  planetDisplayScale: 10
+  showDebugPlanet: 0
+  planetMaterial: {fileID: 0}
+  moonMaterial: {fileID: 0}
+  debugPlanetMaterial: {fileID: 0}
+  moonOrbitRadius: 3
+  moonOrbitSpeed: 10
+  boundaryLineThickness: 1.5
+  boundaryLineAA: 1
+  boundaryLineColor: {r: 1, g: 1, b: 1, a: 1}
+--- !u!114 &1449504978
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1449504972}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0f3ce3dcd3b20344eb33df38790a033c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PlanetDirector
   config:
     randomizeOnStart: 0
+    planetSeed: 0
     planetZone: 1
     planetRadius: 1
     planetAgeInBillions: 4.5
     waterAbundance: 0.7
     hasLargeMoon: 1
-    numTectonicPlates: 20
+    numTectonicPlates: 12
     oceanicPlateChance: 0.6
+    velocityModel: 1
+    minPlateSpeed: 0.5
+    maxPlateSpeed: 2
     plateMapResolutionX: 2048
     plateMapResolutionY: 1024
   plateIdShader: {fileID: 7200000, guid: 1c655a1eb0118ec44bd7ed15336ffc1c, type: 3}
   primordialNoiseShader: {fileID: 7200000, guid: 8e7c6d08da54be74dacedead007fb2e7, type: 3}
   noiseFrequency: 3.5
   noiseAmplitude: 1
-  sunLight: {fileID: 1884763495}
-  sunRotationSpeed: 3
-  planetMaterial: {fileID: 0}
-  moonMaterial: {fileID: 0}
-  boundaryLineThickness: 1.344
-  boundaryLineAA: 0.601
-  boundaryLineColor: {r: 1, g: 1, b: 1, a: 1}
-  planetDisplayScale: 10
-  moonOrbitRadius: 3
-  moonOrbitSpeed: 10
   debugMapDisplay: {fileID: 952693947}
   primordialNoiseMapDisplay: {fileID: 645467553}
-  showDebugPlanet: 1
-  debugPlanetMaterial: {fileID: 2100000, guid: 46ea51ad067b195468eeb61a86b47b04, type: 2}
 --- !u!1 &1482517722
 GameObject:
   m_ObjectHideFlags: 0
