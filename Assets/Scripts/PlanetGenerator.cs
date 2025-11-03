@@ -143,8 +143,6 @@ public static class PlanetGenerator
 		return rt;
 	}
 	
-
-
 	
 }
 
