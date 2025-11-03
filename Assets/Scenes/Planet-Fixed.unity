@@ -1257,16 +1257,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3fd9a90f547c1554d951d4dc34fc77ca, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlanetView
-  planetDisplayScale: 10
-  showDebugPlanet: 0
   planetMaterial: {fileID: 0}
   moonMaterial: {fileID: 0}
   debugPlanetMaterial: {fileID: 0}
+  planetDisplayScale: 10
   moonOrbitRadius: 3
   moonOrbitSpeed: 10
-  boundaryLineThickness: 1.5
-  boundaryLineAA: 1
-  boundaryLineColor: {r: 1, g: 1, b: 1, a: 1}
+  showDebugPlanet: 0
+  boundaryLineColor: {r: 1, g: 0, b: 0, a: 1}
 --- !u!114 &1449504978
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1298,6 +1296,7 @@ MonoBehaviour:
   primordialNoiseShader: {fileID: 7200000, guid: 8e7c6d08da54be74dacedead007fb2e7, type: 3}
   noiseFrequency: 3.5
   noiseAmplitude: 1
+  boundaryLineColor: {r: 1, g: 1, b: 1, a: 1}
   debugMapDisplay: {fileID: 952693947}
   primordialNoiseMapDisplay: {fileID: 645467553}
 --- !u!1 &1482517722
