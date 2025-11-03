@@ -1,8 +1,7 @@
 ﻿using UnityEngine;
 
-/// <summary>
+
 /// Handles the rotation of the sun (Directional Light).
-/// </summary>
 public class SunRig : MonoBehaviour
 {
 	[Tooltip("Assign your 'Sun Light' (Directional Light) from the scene here.")]
