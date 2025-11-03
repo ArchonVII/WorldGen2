@@ -1,0 +1,82 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!21 &2100000
+Material:
+  serializedVersion: 8
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: Sun 1
+  m_Shader: {fileID: 4800000, guid: 9da402ed5969289488d2230b2333b8b6, type: 3}
+  m_Parent: {fileID: 0}
+  m_ModifiedSerializedProperties: 0
+  m_ValidKeywords:
+  - _SGT_SPHEREMASK_OFF
+  m_InvalidKeywords: []
+  m_LightmapFlags: 4
+  m_EnableInstancingVariants: 0
+  m_DoubleSidedGI: 0
+  m_CustomRenderQueue: -1
+  stringTagMap: {}
+  disabledShaderPasses: []
+  m_LockedProperties: 
+  m_SavedProperties:
+    serializedVersion: 3
+    m_TexEnvs:
+    - _FlowTex:
+        m_Texture: {fileID: 2800000, guid: 4012f49ff9f04fa48b3bde7dbc6229a7, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _MainTex:
+        m_Texture: {fileID: 2800000, guid: 9c207eee0c7c8994ab6083f3127be60e, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _NoiseTex:
+        m_Texture: {fileID: 11700000, guid: 031334f6c965af448a549e951b9e7b0e, type: 2}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _SunspotsTex:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - unity_Lightmaps:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - unity_LightmapsInd:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - unity_ShadowMasks:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    m_Ints: []
+    m_Floats:
+    - _Brightness: 1
+    - _CW_DisableFog: 0
+    - _FlowStrength: 1
+    - _MainWarp: 0.001
+    - _NoiseBias: 0.5
+    - _NoiseOctaves: 6
+    - _NoiseSpeed: 10
+    - _NoiseStrength: 0.4
+    - _NoiseTile: 100
+    - _QueueControl: -1
+    - _QueueOffset: 0
+    - _RimPower: 2
+    - _SGT_SphereMask: 0
+    - _SGT_SphereMaskFalloff: 3
+    - _SGT_SphereMaskRadius: 1
+    - _SunspotsStrength: 0
+    - _SunspotsWarp: 0.001
+    - _TimeScale: 15
+    m_Colors:
+    - _Color: {r: 1, g: 1, b: 1, a: 1}
+    - _NoiseColor: {r: 1, g: 0.8672495, b: 0, a: 1}
+    - _RimColor: {r: 1, g: 0.8218751, b: 0, a: 1}
+    - _SGT_SphereMaskPosition: {r: 0, g: 0, b: 0, a: 1}
+    - _SunspotsColor: {r: 0, g: 0.673089, b: 0.735849, a: 1}
+  m_BuildTextureStacks: []
+  m_AllowLocking: 1

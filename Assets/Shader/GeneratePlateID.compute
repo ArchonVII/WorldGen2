@@ -1,0 +1,66 @@
+#pragma kernel CSMain
+
+// This struct MUST match the C# struct exactly
+struct PlateGpuData
+{
+    float3 center3D;
+    float2 movementVector;
+    float speed;
+    int isOceanic;
+};
+
+// Input buffer of all plate data
+StructuredBuffer<PlateGpuData> _PlateDataBuffer;
+// Our writable output texture (R8 format)
+RWTexture2D<float> _PlateIDTexture;
+
+// Parameters set from C#
+int _NumPlates;
+int2 _Resolution;
+
+
+// Helper to convert 2D UV to 3D Sphere position
+float3 UVToSphere(float2 uv)
+{
+    float theta = uv.x * 3.1415926535 * 2.0;
+    float phi = uv.y * 3.1415926535;
+    float sin_phi = sin(phi);
+    return float3(
+        sin_phi * cos(theta),
+        cos(phi),
+        sin_phi * sin(theta)
+    );
+}
+
+[numthreads(8, 8, 1)]
+void CSMain(uint3 id : SV_DispatchThreadID)
+{
+    // Get 0-1 UV coordinate
+    float2 uv = float2(id.x / (float) _Resolution.x, id.y / (float) _Resolution.y);
+    
+    // Get 3D position on the sphere
+    float3 p1 = UVToSphere(uv);
+
+    // Find the closest plate center
+    float maxDot = -2.0; // Start lower than lowest possible dot product (-1)
+    int closestID = 0;
+
+    for (int i = 0; i < _NumPlates; i++)
+    {
+        float3 p2 = _PlateDataBuffer[i].center3D;
+        
+        // Dot product is our distance check
+        // (A larger dot product means a smaller angle/distance)
+        float dotProd = dot(p1, p2);
+
+        if (dotProd > maxDot)
+        {
+            maxDot = dotProd;
+            closestID = i;
+        }
+    }
+
+    // Write the plate ID (normalized from 0-255 to 0-1)
+    // The R8 texture format will store this 0-1 float as an 8-bit byte.
+    _PlateIDTexture[id.xy] = (float) closestID / 255.0;
+}
