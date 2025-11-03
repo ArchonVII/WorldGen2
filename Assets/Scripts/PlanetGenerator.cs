@@ -2,15 +2,11 @@
 using System.Collections.Generic;
 using System.Linq;
 
-/// <summary>
-/// Optimized planet generator.
-/// This version is simplified to only generate the data needed for the shader-based overlay.
-/// </summary>
+
 public static class PlanetGenerator
 {
-	/// <summary>
+
 	/// Main entry point for planet generation
-	/// </summary>
 	public static PlanetData Generate(PlanetGenerationConfig config)
 	{
 		PlanetData data = new PlanetData(config);
@@ -25,9 +21,6 @@ public static class PlanetGenerator
 		if (data.HasTectonics)
 		{
 			GenerateTectonicPlates(data);
-			
-			// --- NEW ---
-			// Create the empty GPU assets that our compute shaders will fill
 			CreateComputeAssets(data);
 		}
 
@@ -36,6 +29,8 @@ public static class PlanetGenerator
 
 	private static PlanetGenerationConfig RandomizeConfig(PlanetGenerationConfig config)
 	{
+		
+		config.planetSeed = Random.Range(int.MinValue, int.MaxValue);
 		config.planetZone = (HabitableZone)Random.Range(0, 3);
 		config.planetRadius = Random.Range(0.25f, 2.0f);
 		config.planetAgeInBillions = Random.Range(0.5f, 10f);
@@ -43,6 +38,11 @@ public static class PlanetGenerator
 		config.hasLargeMoon = Random.Range(0, 2) > 0;
 		config.numTectonicPlates = Random.Range(5, 40);
 		config.oceanicPlateChance = Random.Range(0.4f, 0.8f);
+		
+		// Randomize velocity fields
+		config.velocityModel = (PlateVelocityModel)Random.Range(0, 2); // 0=Random, 1=AxisFlows2
+		config.minPlateSpeed = Random.Range(0.2f, 0.8f);
+		config.maxPlateSpeed = Random.Range(1.0f, 2.5f);
 		return config;
 	}
 
@@ -70,8 +70,15 @@ public static class PlanetGenerator
 
 	private static void GenerateTectonicPlates(PlanetData data)
 	{
-		int seed = (int)(data.config.planetAgeInBillions * 1000);
-		Random.InitState(seed);
+		// --- MODIFIED: Use new planetSeed ---
+		int seedToUse = data.config.planetSeed;
+		if (seedToUse == 0)
+		{
+			// Fallback to old logic if seed is 0
+			seedToUse = (int)(data.config.planetAgeInBillions * 1000) + 1;
+			if (seedToUse == 0) seedToUse = 1; // Handle edge case
+		}
+		Random.InitState(seedToUse);
 
 		// Create plates with random seed points
 		data.TectonicPlates = new List<TectonicPlate>();
@@ -90,8 +97,64 @@ public static class PlanetGenerator
 			data.TectonicPlates.Add(new TectonicPlate(i, new Vector2(u, v), data.config));
 		}
 
-
+		// --- NEW: Apply velocity model after plates are created ---
+		ApplyPlateVelocityModel(data);
 	}
+
+	private static void ApplyPlateVelocityModel(PlanetData data)
+	{
+		// Random state is already initialized by GenerateTectonicPlates
+		
+		// Setup for AxisFlows model
+		Vector3 axis1 = Random.insideUnitSphere.normalized;
+		Vector3 axis2 = Random.insideUnitSphere.normalized;
+		float weight1 = Random.Range(-0.5f, 0.5f);
+		float weight2 = Random.Range(-0.5f, 0.5f);
+
+		foreach (var plate in data.TectonicPlates)
+		{
+			Vector3 p = plate.Center3D; // Plate's 3D center position
+			Vector3 v_dir = Vector3.zero; // Final 3D velocity direction
+			
+			// 1. Calculate base speed
+			plate.Speed = Random.Range(data.config.minPlateSpeed, data.config.maxPlateSpeed);
+
+			// 2. Calculate movement direction vector
+			switch (data.config.velocityModel)
+			{
+			case PlateVelocityModel.AxisFlows2:
+			case PlateVelocityModel.AxisFlows4: // For now, just use 2 axes
+				// v(p) = Σ w_k * (a_k × p)
+				// This vector is already tangent to the sphere.
+				v_dir = (Vector3.Cross(axis1, p) * weight1) + 
+				(Vector3.Cross(axis2, p) * weight2);
+				break;
+					
+			case PlateVelocityModel.Random:
+			default:
+				// Original logic, but now in 3D
+				// Get a random vector and find its tangent to the sphere
+				Vector3 randomVec = Random.insideUnitSphere;
+				v_dir = Vector3.Cross(p, randomVec); // Cross product gives a tangent
+				break;
+			}
+			
+			// 3. Apply the direction (normalized)
+			if (v_dir.sqrMagnitude > 0.001f)
+			{
+				plate.MovementVector = v_dir.normalized;
+			}
+			else
+			{
+				// Handle edge case (e.g., if p lines up with axis)
+				plate.MovementVector = Vector3.Cross(p, Vector3.up).normalized;
+				if (plate.MovementVector.sqrMagnitude < 0.001f)
+					plate.MovementVector = Vector3.Cross(p, Vector3.right).normalized;
+			}
+		}
+	}
+
+	
 	/// <summary>
 	/// Creates the empty RenderTextures and ComputeBuffer on the GPU.
 	/// </summary>

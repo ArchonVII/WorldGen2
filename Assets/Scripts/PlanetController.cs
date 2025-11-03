@@ -26,7 +26,13 @@ public class PlanetController : MonoBehaviour
 		// Set the new default values here
 		oceanicPlateChance = 0.6f,
 		plateMapResolutionX = 2048,
-		plateMapResolutionY = 1024
+		plateMapResolutionY = 1024,
+		
+		// --- ADDED ---
+		planetSeed = 0, // 0 = use fallback logic
+		velocityModel = PlateVelocityModel.AxisFlows2, // Default to new model
+		minPlateSpeed = 0.5f,
+		maxPlateSpeed = 2.0f
 	};
 	
 	[Header("Compute Shaders")]

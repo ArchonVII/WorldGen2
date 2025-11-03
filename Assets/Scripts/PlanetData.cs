@@ -26,6 +26,14 @@ public enum GeneratedPlanetType
 	IceShellWorld     // No Tectonics, Has Water (Europa-Like)
 }
 
+public enum PlateVelocityModel 
+{ 
+	Random, 
+	AxisFlows2, 
+	AxisFlows4, 
+	CurlNoise 
+}
+
 /// <summary>
 /// A "struct" to hold all the *input* variables for our generator.
 /// We pass this to the generator.
@@ -36,6 +44,10 @@ public struct PlanetGenerationConfig
 	[Header("Behavior")]
 	[Tooltip("If true, all inputs below will be randomized on Start.")]
 	public bool randomizeOnStart;
+	
+	// --- NEW ---
+	[Tooltip("The master seed for all random generation. If 0, a fallback is used.")]
+	public int planetSeed;
 
 	[Header("Star System (Climate)")]
 	[Tooltip("Controls the surface temperature and potential for liquid water.")]
@@ -68,6 +80,19 @@ public struct PlanetGenerationConfig
 	[Tooltip("The chance (0-1) that a new plate will be oceanic vs continental.")]
 	[Range(0f, 1f)]
 	public float oceanicPlateChance;
+	
+	// --- NEW ---
+	[Header("Plate Velocity")]
+	[Tooltip("Method used to calculate initial plate movement vectors.")]
+	public PlateVelocityModel velocityModel;
+	
+	[Tooltip("Minimum plate speed.")]
+	[Range(0.1f, 5.0f)]
+	public float minPlateSpeed;
+	
+	[Tooltip("Maximum plate speed.")]
+	[Range(0.1f, 5.0f)]
+	public float maxPlateSpeed;
 
 	[Header("Resolutions")]
 	[Tooltip("The width of the generated plate ID map. Higher = more precise boundaries.")]
@@ -86,16 +111,20 @@ public struct PlanetGenerationConfig
 public struct PlateGpuData
 {
 	public Vector3 center3D;
-	public Vector2 movementVector;
+	
+	// --- MODIFIED: Changed from Vector2 to Vector3 ---
+	// This supports 3D velocity vectors from models like AxisFlows
+	public Vector3 movementVector;
 	public float speed;
 	public int isOceanic;
 
 	// We must define the size (stride) for the compute buffer
 	public static int GetStride()
 	{
-		// Vector3 (3) + Vector2 (2) + float (1) + int (1) = 7 floats
+		// --- MODIFIED: 3 + 3 + 1 + 1 = 8 floats ---
+		// Vector3 (3) + Vector3 (3) + float (1) + int (1) = 8 floats
 		// (int is 4 bytes, same as float)
-		return sizeof(float) * (3 + 2 + 1) + sizeof(int);
+		return sizeof(float) * (3 + 3 + 1) + sizeof(int);
 	}
 }
 
@@ -109,7 +138,8 @@ public class TectonicPlate
 	public Vector2 Center;  // Seed point in UV space (0-1)
 	public Vector3 Center3D; // Pre-calculated 3D position on unit sphere
 	public Color Color;     // For visualization
-	public Vector2 MovementVector;  // Direction and speed of plate movement
+	// --- MODIFIED: Changed from Vector2 to Vector3 ---
+	public Vector3 MovementVector;  // Direction and speed of plate movement
 	public float Speed;
 	public bool IsOceanic;  // Will be used in future heightmap generation
 	
@@ -128,10 +158,11 @@ public class TectonicPlate
 			Mathf.Sin(phi) * Mathf.Sin(theta)
 		);
 		
-		// Random movement (will be used in later steps)
-		float angle = Random.Range(0f, Mathf.PI * 2f);
-		Speed = Random.Range(0.5f, 2.0f);
-		MovementVector = new Vector2(Mathf.Cos(angle), Mathf.Sin(angle)) * Speed;
+		// --- MODIFIED: Removed old velocity logic ---
+		// Velocity is now calculated in PlanetGenerator.cs
+		// after all plates are created.
+		Speed = 0;
+		MovementVector = Vector3.zero;
 		
 		// Random crust type (will be used in heightmap generation)
 		IsOceanic = Random.Range(0f, 1f) < config.oceanicPlateChance;

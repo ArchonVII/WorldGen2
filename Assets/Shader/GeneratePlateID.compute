@@ -4,7 +4,8 @@
 struct PlateGpuData
 {
     float3 center3D;
-    float2 movementVector;
+// --- MODIFIED: Changed from float2 to float3 ---
+    float3 movementVector;
     float speed;
     int isOceanic;
 };
